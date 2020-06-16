@@ -1,0 +1,2 @@
+# solidot_rss_webhook
+solidot.com网站RSS订阅与钉钉webhook推送对接的PHP版本
