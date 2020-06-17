@@ -17,5 +17,9 @@
 ```
 或者使用其他定时器框架调用本文件亦可。
 
+### 演示截图
+![screenshot](README_PICS/0.png)
+
+
 ### License
 本项目按照 Apache 2.0 协议自由分发。
