@@ -1,8 +1,7 @@
 <?php
 
-require "common/database.php";
+require "common/function.php";
 
-//因为 solidot 近期使用了360的证书，部分 linux openSSL 无法识别此证书导致无法获取 RSS 内容，此处代码绕过了 SSL 验证。
 $arrContextOptions=array(
     "ssl"=>array(
         "verify_peer"=>false,
@@ -17,10 +16,11 @@ $result = simplexml_load_string($buff,'SimpleXMLElement',LIBXML_NOCDATA);
 $result = json_decode(json_encode($result),true);
 $list = $result['channel']['item'];
 
-//移除RSS追加的图片
 for($i=0;$i<sizeof($list);$i++){
     $list[$i]["content"] = str_replace('<p><img src=\"https:\/\/img.solidot.org\/\/0\/446\/liiLIZF8Uh6yM.jpg\" height=\"120\" style=\"display:block\"\/><\/p>',"",$list[$i]["content"]);
 }
+
+// echo json_encode($list);
 
 // 从数据库获取上次推送的状态
 $latest_info = select_data("select * from `rss_news` order by `create_time` desc limit 0,1");
@@ -32,19 +32,21 @@ for($i=sizeof($list);$i>=0;$i--){
         $pushData["msgtype"] = "actionCard";
         $pushData["actionCard"]["title"] = $list[$i]["title"];
         $pushData["actionCard"]["text"] = "![screenshot](https://laomao.website/assets/images/sites/solidot.jpg)\n".
-            "### ".$list[$i]["title"]." \n".strip_tags($list[$i]["description"]).substr(0,255);
+                                            "### ".$list[$i]["title"]." \n".strip_tags($list[$i]["description"]).substr(0,255);
         $pushData["actionCard"]["btnOrientation"] = "0";
         $pushData["actionCard"]["singleTitle"] = "阅读全文";
         $pushData["actionCard"]["singleURL"] = $list[$i]["link"];
 
-        $webhook = "https://oapi.dingtalk.com/robot/send?access_token=xxx";
+        $webhook = "https://oapi.dingtalk.com/robot/send?access_token=[Your Token]";
 
         $result = request_by_curl($webhook, json_encode($pushData));
         echo $result;
 
+
+
         //插入数据库
         insert_data("INSERT INTO `rss_news` (`ID`, `title`, `link`, `description`, `create_time`, `content`) VALUES 
-                    (NULL, '".$list[$i]["title"]."', '".$list[$i]["link"]."', '".strip_tags($list[$i]["description"]).substr(0,255)."', 
+                    (NULL, '".$list[$i]["title"]."', '".$list[$i]["link"]."', '".addslashes(strip_tags($list[$i]["description"]).substr(0,255))."', 
                     '".(date('Y-m-d H:i:s',strtotime($list[$i]["pubDate"])))."', 
                     '".addslashes($list[$i]["description"])."')");
 
